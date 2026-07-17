@@ -179,7 +179,15 @@
 <script>
 const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const PT_DAYS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const MONTH_STARTS  = [new Date(2026,5,17), new Date(2026,6,17), new Date(2026,7,16)];
+const FLEXOES_MONTH_STARTS = [new Date(2026,5,17), new Date(2026,6,17), new Date(2026,7,16)];
+
+function getMonthStart(catId, mi) {
+  const m = state[catId].months[mi];
+  if (m.startDate) return new Date(m.startDate);
+  // fallback for flexoes
+  if (catId === 'flexoes') return FLEXOES_MONTH_STARTS[mi];
+  return new Date();
+}
 const MONTH_LABELS  = ['Mês 1','Mês 2','Mês 3'];
 const MONTH_COLORS  = ['m1','m2','m3'];
 const DAYS_PER_MONTH = 30;
@@ -255,7 +263,7 @@ let state = loadState();
 let activeTab   = 'flexoes';
 let activeMonth = 0;
 
-function dayDate(mi, di) { const d = new Date(MONTH_STARTS[mi]); d.setDate(d.getDate()+di); return d; }
+function dayDate(mi, di, catId) { catId=catId||activeTab; const d = getMonthStart(catId, mi); d.setDate(d.getDate()+di); return d; }
 function fmtDate(d) { return PT_DAYS[d.getDay()]+' '+d.getDate()+' '+PT_MONTHS[d.getMonth()]; }
 function fmtNow()   { const d = new Date(); return fmtDate(d)+' '+d.getFullYear(); }
 
@@ -348,7 +356,7 @@ function renderMonthNav(){
 function renderHeader(){
   const cat=CATEGORIES.find(c=>c.id===activeTab), m=state[activeTab].months[activeMonth];
   document.getElementById('header-title').textContent=cat.label;
-  const s=MONTH_STARTS[activeMonth];
+  const s=getMonthStart(activeTab, activeMonth);
   document.getElementById('header-sub').textContent=MONTH_LABELS[activeMonth]+' · '+(m.reps?m.reps+' '+cat.unit+'/dia':'define o teu início')+' · '+fmtDate(s)+' '+s.getFullYear();
 }
 
@@ -413,6 +421,7 @@ function renderSection(){
       if(!val||val<1){alert('Introduz um valor válido.');return;}
       state[activeTab].months[0].unlocked=true; state[activeTab].months[0].reps=val;
       state[activeTab].months[0].days=Array(DAYS_PER_MONTH).fill(null);
+      if (activeTab !== 'flexoes') state[activeTab].months[0].startDate = new Date().toISOString();
       saveState();render();
     };
     return;
@@ -440,6 +449,7 @@ function renderSection(){
         if(!val||val<1){alert('Introduz um valor válido.');return;}
         state[activeTab].months[activeMonth].unlocked=true;
         state[activeTab].months[activeMonth].reps=val;
+        state[activeTab].months[activeMonth].startDate = new Date().toISOString();
         saveState();render();
       };
     }
