@@ -167,6 +167,24 @@
   </div>
 </div>
 
+<!-- Modal: Editar data de início -->
+<div class="modal-backdrop" id="modal-date">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="date-title">Corrigir data de início</div><div class="modal-sub" id="date-sub"></div></div>
+      <button class="modal-close" id="date-close">✕</button>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Data de início</div>
+      <input type="date" id="date-val" style="width:100%;font-size:1rem">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="date-cancel">Cancelar</button>
+      <button class="btn-primary" id="date-save">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <p class="eyebrow">Desafio · One Punch Man</p>
   <h1>90 Dias de<br><span id="header-title">Flexões</span></h1>
@@ -182,11 +200,23 @@ const PT_DAYS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const FLEXOES_MONTH_STARTS = [new Date(2026,5,17), new Date(2026,6,17), new Date(2026,7,16)];
 
 function getMonthStart(catId, mi) {
+  // Flexoes always use hardcoded dates
+  if (catId === 'flexoes') return new Date(FLEXOES_MONTH_STARTS[mi]);
+  // Other cats: only use startDate if it was manually set by user (manualDate flag)
   const m = state[catId].months[mi];
-  if (m.startDate) return new Date(m.startDate);
-  // fallback for flexoes
-  if (catId === 'flexoes') return FLEXOES_MONTH_STARTS[mi];
+  if (m.manualDate) return new Date(m.manualDate);
+  // fallback: today for month 0, or prev+30 for subsequent
+  if (mi === 0) return new Date();
+  const prev = state[catId].months[mi-1];
+  if (prev.manualDate) { const d = new Date(prev.manualDate); d.setDate(d.getDate()+30); return d; }
   return new Date();
+}
+
+function setMonthStart(catId, mi, dateStr) {
+  // Strip any bad startDate and store as manualDate
+  delete state[catId].months[mi].startDate;
+  state[catId].months[mi].manualDate = dateStr; // store as YYYY-MM-DD string
+  saveState();
 }
 const MONTH_LABELS  = ['Mês 1','Mês 2','Mês 3'];
 const MONTH_COLORS  = ['m1','m2','m3'];
@@ -241,6 +271,8 @@ function loadState() {
           if (!m.notes) m.notes = {};
           if (!m.changelog) m.changelog = [];
           if (m.days && typeof m.days[0] === 'boolean') m.days = m.days.map(d => d ? (m.reps || 30) : null);
+        // remove corrupted startDate from previous versions
+        if (m.startDate) { delete m.startDate; }
         });
         // auto-unlock month 2/3 if previous is complete
         for (let mi = 1; mi < TOTAL_MONTHS; mi++) {
@@ -311,6 +343,29 @@ function saveAdjust(){
   m.changelog.push({date:fmtNow(),from:m.reps,to:val,unit:cat.unit,reason});
   m.reps=val; saveState();closeAdjust();render();
 }
+
+let dateCtx={catId:null,mi:null};
+function openDateEdit(catId,mi){
+  dateCtx={catId,mi};
+  const cat=CATEGORIES.find(c=>c.id===catId);
+  document.getElementById('date-title').textContent='📅 Corrigir data — '+cat.label+' '+MONTH_LABELS[mi];
+  document.getElementById('date-sub').textContent='As datas dos dias vão ser recalculadas automaticamente';
+  const s=getMonthStart(catId,mi);
+  const iso=s.toISOString().split('T')[0];
+  document.getElementById('date-val').value=iso;
+  document.getElementById('modal-date').classList.add('open');
+}
+function closeDateEdit(){document.getElementById('modal-date').classList.remove('open');}
+function saveDateEdit(){
+  const val=document.getElementById('date-val').value;
+  if(!val){alert('Seleciona uma data.');return;}
+  setMonthStart(dateCtx.catId,dateCtx.mi,val);
+  closeDateEdit();render();
+}
+document.getElementById('date-close').onclick=closeDateEdit;
+document.getElementById('date-cancel').onclick=closeDateEdit;
+document.getElementById('date-save').onclick=saveDateEdit;
+document.getElementById('modal-date').onclick=e=>{if(e.target===document.getElementById('modal-date'))closeDateEdit();};
 
 document.getElementById('note-close').onclick=closeNote;
 document.getElementById('note-save').onclick=saveNote;
@@ -421,7 +476,7 @@ function renderSection(){
       if(!val||val<1){alert('Introduz um valor válido.');return;}
       state[activeTab].months[0].unlocked=true; state[activeTab].months[0].reps=val;
       state[activeTab].months[0].days=Array(DAYS_PER_MONTH).fill(null);
-      if (activeTab !== 'flexoes') state[activeTab].months[0].startDate = new Date().toISOString();
+      if (activeTab !== 'flexoes') { const td=new Date(); state[activeTab].months[0].manualDate=td.toISOString().split('T')[0]; }
       saveState();render();
     };
     return;
@@ -449,7 +504,7 @@ function renderSection(){
         if(!val||val<1){alert('Introduz um valor válido.');return;}
         state[activeTab].months[activeMonth].unlocked=true;
         state[activeTab].months[activeMonth].reps=val;
-        state[activeTab].months[activeMonth].startDate = new Date().toISOString();
+        { const td=new Date(); state[activeTab].months[activeMonth].manualDate=td.toISOString().split('T')[0]; }
         saveState();render();
       };
     }
@@ -466,8 +521,11 @@ function renderSection(){
   const body=document.createElement('div');
   body.innerHTML=`
     <div class="section-topbar">
-      <div class="topbar-info">Valor atual: <strong>${m.reps||'—'} ${cat.unit}</strong><br>Objetivo: ${cat.max} ${cat.unit}</div>
-      <button class="btn-adjust" id="btn-adj">⚙️ Ajustar valor</button>
+      <div class="topbar-info">Valor atual: <strong>${m.reps||'—'} ${cat.unit}</strong><br>Objetivo: ${cat.max} ${cat.unit}<br><span style="font-size:0.72rem;color:var(--muted)">Início: ${fmtDate(getMonthStart(activeTab,activeMonth))}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <button class="btn-adjust" id="btn-adj">⚙️ Ajustar valor</button>
+        ${activeTab!=='flexoes'?'<button class="btn-adjust" id="btn-date" style="font-size:0.72rem">📅 Corrigir data</button>':''}
+      </div>
     </div>
     ${changelogHTML}
     <div class="progress-wrap">
@@ -482,6 +540,8 @@ function renderSection(){
     <div class="grid" id="main-grid"></div>`;
   sec.appendChild(body);
   document.getElementById('btn-adj').onclick=()=>openAdjust(activeTab,activeMonth);
+  const btnDate=document.getElementById('btn-date');
+  if(btnDate) btnDate.onclick=()=>openDateEdit(activeTab,activeMonth);
 
   const grid=document.getElementById('main-grid');
   m.days.forEach((dayVal,i)=>{
