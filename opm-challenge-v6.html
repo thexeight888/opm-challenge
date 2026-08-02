@@ -108,6 +108,24 @@
     .card.done .checkmark { opacity: 1; transform: scale(1); }
     .card-reps { font-size: 0.68rem; font-weight: 600; color: var(--muted); }
     .card.done .card-reps { color: var(--done); }
+    .card.failed { border-color: #f87171; background: rgba(248,113,113,0.08); }
+    .card.failed .card-date { color: #f87171; }
+    .card.failed .card-reps { color: #f87171; }
+    .card.failed .check-ring { border-color: #f87171; background: rgba(248,113,113,0.15); }
+    .card.failed .day-num { color: #f87171; }
+    /* ACTION SHEET */
+    .action-sheet-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; padding-bottom:20px; }
+    .action-sheet-backdrop.open { display:flex; }
+    .action-sheet { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; width:100%; max-width:400px; overflow:hidden; }
+    .action-sheet-title { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:14px 16px 10px; letter-spacing:0.1em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+    .action-sheet-btn { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:pointer; border:none; background:transparent; color:var(--text); font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; width:100%; border-bottom:1px solid var(--border); transition:background 0.15s; }
+    .action-sheet-btn:last-child { border-bottom:none; }
+    .action-sheet-btn:hover { background:var(--card); }
+    .action-sheet-btn.success { color:var(--done); }
+    .action-sheet-btn.fail { color:#f87171; }
+    .action-sheet-btn.clear { color:var(--muted); }
+    .action-sheet-icon { font-size:1.3rem; width:28px; text-align:center; }
+
     .note-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; cursor: pointer; font-size: 11px; opacity: 0.3; transition: opacity 0.18s; padding: 2px; line-height: 1; }
     .card:hover .note-btn, .note-btn.has-note { opacity: 1; }
 
@@ -193,6 +211,22 @@
 
 <div id="month-nav-wrap"></div>
 <div id="sections"></div>
+
+<!-- Action Sheet -->
+<div class="action-sheet-backdrop" id="action-sheet">
+  <div class="action-sheet">
+    <div class="action-sheet-title" id="action-sheet-title">Dia 1 · Qua 17 Jun</div>
+    <button class="action-sheet-btn success" id="action-done">
+      <span class="action-sheet-icon">✅</span> Concluído
+    </button>
+    <button class="action-sheet-btn fail" id="action-fail">
+      <span class="action-sheet-icon">❌</span> Falhado
+    </button>
+    <button class="action-sheet-btn clear" id="action-clear">
+      <span class="action-sheet-icon">↩️</span> Limpar
+    </button>
+  </div>
+</div>
 
 <script>
 const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -417,8 +451,8 @@ function renderHeader(){
 
 function renderDashboard(cat, container) {
   const months = state[cat.id].months;
-  const totalDays  = months.reduce((s,m)=>s+m.days.filter(d=>d!==null).length,0);
-  const totalReps  = months.reduce((s,m)=>s+m.days.reduce((a,v)=>a+(v||0),0),0);
+  const totalDays  = months.reduce((s,m)=>s+m.days.filter(d=>d!==null&&d!=='x').length,0);
+  const totalReps  = months.reduce((s,m)=>s+m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0),0);
   const totalGoal  = TOTAL_MONTHS * DAYS_PER_MONTH;
 
   const dash = document.createElement('div');
@@ -437,8 +471,8 @@ function renderDashboard(cat, container) {
     </div>
     <div class="dash-months">
       ${months.map((m,mi)=>{
-        const d=m.days.filter(x=>x!==null).length;
-        const r=m.days.reduce((a,v)=>a+(v||0),0);
+        const d=m.days.filter(x=>x!==null&&x!=='x').length;
+        const r=m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0);
         const colors=['c-m1','c-m2','c-m3'];
         return `<div class="dash-month-card">
           <div class="dash-month-val ${colors[mi]}">${d}/30</div>
@@ -449,7 +483,7 @@ function renderDashboard(cat, container) {
     </div>
     <div class="dash-bar-wrap">
       ${months.map((m,mi)=>{
-        const d=m.days.filter(x=>x!==null).length;
+        const d=m.days.filter(x=>x!==null&&x!=='x').length;
         const pct=(d/DAYS_PER_MONTH*100).toFixed(0);
         const barColors=['var(--m1)','var(--m2)','var(--m3)'];
         return `<div class="dash-bar-row">
@@ -511,9 +545,10 @@ function renderSection(){
     return;
   }
 
-  const done=m.days.filter(d=>d!==null).length;
+  const done=m.days.filter(d=>d!==null&&d!=='x').length;
+  const failed=m.days.filter(d=>d==='x').length;
   const pct=(done/DAYS_PER_MONTH*100).toFixed(1);
-  const total=m.days.reduce((s,v)=>s+(v||0),0);
+  const total=m.days.reduce((s,v)=>s+(typeof v==='number'?v:0),0);
   const color=MONTH_COLORS[activeMonth];
 
   const changelogHTML=m.changelog&&m.changelog.length?`<div class="changelog"><div class="changelog-title">📋 Historial de alterações</div>${m.changelog.map(e=>`<div class="changelog-entry"><div class="cl-meta">${e.date} &nbsp;·&nbsp; ${e.from} → ${e.to} ${e.unit}</div><div class="cl-reason">${e.reason}</div></div>`).join('')}</div>`:'';
@@ -535,7 +570,7 @@ function renderSection(){
     <div class="stats">
       <div class="stat"><div class="stat-val">${done}</div><div class="stat-label">Dias feitos</div></div>
       <div class="stat"><div class="stat-val">${total>0?total.toLocaleString('pt-PT'):'—'}</div><div class="stat-label">Total ${cat.unit}</div></div>
-      <div class="stat"><div class="stat-val">${DAYS_PER_MONTH-done}</div><div class="stat-label">Restantes</div></div>
+      <div class="stat"><div class="stat-val" style="${failed>0?'color:#f87171':''}">${failed}</div><div class="stat-label">Falhados</div></div>
     </div>
     <div class="grid" id="main-grid"></div>`;
   sec.appendChild(body);
@@ -554,6 +589,39 @@ function renderSection(){
     grid.appendChild(card);
   });
 }
+
+// ── ACTION SHEET ─────────────────────────────────────────
+let actionCtx = { catId:null, mi:null, di:null };
+
+function openActionSheet(catId, mi, di) {
+  actionCtx = { catId, mi, di };
+  const cat = CATEGORIES.find(c => c.id === catId);
+  const d   = dayDate(mi, di, catId);
+  document.getElementById('action-sheet-title').textContent =
+    cat.emoji + ' ' + cat.label + ' · Dia ' + (di+1) + ' · ' + fmtDate(d);
+  document.getElementById('action-sheet').classList.add('open');
+}
+
+function closeActionSheet() {
+  document.getElementById('action-sheet').classList.remove('open');
+}
+
+document.getElementById('action-done').onclick = () => {
+  const m = state[actionCtx.catId].months[actionCtx.mi];
+  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = m.reps || 0;
+  saveState(); closeActionSheet(); render();
+};
+document.getElementById('action-fail').onclick = () => {
+  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = 'x';
+  saveState(); closeActionSheet(); render();
+};
+document.getElementById('action-clear').onclick = () => {
+  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = null;
+  saveState(); closeActionSheet(); render();
+};
+document.getElementById('action-sheet').onclick = (e) => {
+  if (e.target === document.getElementById('action-sheet')) closeActionSheet();
+};
 
 render();
 </script>
