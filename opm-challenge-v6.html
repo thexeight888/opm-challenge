@@ -238,12 +238,12 @@ const PT_DAYS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const FLEXOES_MONTH_STARTS = [new Date(2026,5,17), new Date(2026,6,17), new Date(2026,7,16)];
 
 function getMonthStart(catId, mi) {
-  // Flexoes always use hardcoded dates
-  if (catId === 'flexoes') return new Date(FLEXOES_MONTH_STARTS[mi]);
-  // Other cats: only use startDate if it was manually set by user (manualDate flag)
   const m = state[catId].months[mi];
+  // Manual date always wins, for all categories
   if (m.manualDate) return new Date(m.manualDate);
-  // fallback: today for month 0, or prev+30 for subsequent
+  // Flexoes fallback to hardcoded dates
+  if (catId === 'flexoes') return new Date(FLEXOES_MONTH_STARTS[mi]);
+  // Other cats: infer from previous month or use today
   if (mi === 0) return new Date();
   const prev = state[catId].months[mi-1];
   if (prev.manualDate) { const d = new Date(prev.manualDate); d.setDate(d.getDate()+30); return d; }
