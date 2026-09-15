@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Desafio One Punch Man</title>
+  <title>XP Daily</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,11 +11,14 @@
       --bg: #0d0d0d; --surface: #161616; --card: #1e1e1e; --border: #2a2a2a;
       --accent: #c8f135; --accent-dim: rgba(200,241,53,0.10);
       --done: #4ade80; --done-dim: rgba(74,222,128,0.10);
+      --fail: #f87171; --fail-dim: rgba(248,113,113,0.10);
       --text: #f0f0f0; --muted: #555; --radius: 10px;
-      --m1: #c8f135; --m2: #38bdf8; --m3: #f97316;
+      --m1:#c8f135; --m2:#38bdf8; --m3:#f97316; --m4:#a78bfa; --m5:#f472b6; --m6:#34d399;
+      --xp: #fbbf24;
     }
     body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; min-height: 100vh; padding: 0 0 80px; }
 
+    /* NAV */
     nav { position: sticky; top: 0; z-index: 100; background: rgba(13,13,13,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; gap: 4px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none; }
     nav::-webkit-scrollbar { display: none; }
     .nav-btn { flex-shrink: 0; background: transparent; border: 1.5px solid var(--border); border-radius: 99px; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
@@ -23,122 +26,164 @@
     .nav-btn.active { background: var(--accent); border-color: var(--accent); color: #0d0d0d; }
     .nav-btn.locked { opacity: 0.45; }
 
-    .month-nav { display: flex; gap: 6px; padding: 12px 16px 0; max-width: 820px; margin: 0 auto; }
-    .month-btn { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.75rem; font-weight: 700; padding: 8px 4px; cursor: pointer; transition: all 0.18s; text-align: center; }
+    /* HERO */
+    .hero { padding: 24px 16px 0; max-width: 820px; margin: 0 auto; }
+    .hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+    .hero-info { flex: 1; }
+    .hero-name { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; }
+    .hero-level { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+    .hero-level span { color: var(--accent); }
+    .xp-bar-wrap { margin-bottom: 6px; }
+    .xp-bar-meta { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+    .xp-bar-meta .xp-val { color: var(--xp); }
+    .xp-bar-bg { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .xp-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--xp), #f59e0b); transition: width 0.5s ease; }
+
+    /* STREAK BADGES */
+    .streak-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .streak-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; text-align: center; flex: 1; }
+    .streak-badge.fire { border-color: #f97316; }
+    .streak-badge-val { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+    .streak-badge.fire .streak-badge-val { color: #f97316; }
+    .streak-badge-label { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
+
+    /* CONQUISTAS */
+    .achievements { margin-bottom: 16px; }
+    .section-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .achievements-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 0.75rem; color: var(--muted); transition: all 0.2s; }
+    .badge.unlocked { border-color: var(--xp); color: var(--text); background: rgba(251,191,36,0.08); }
+    .badge-icon { font-size: 1rem; filter: grayscale(1); opacity: 0.4; }
+    .badge.unlocked .badge-icon { filter: none; opacity: 1; }
+
+    /* SKILLS OVERVIEW */
+    .skills-overview { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .skill-row { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color 0.18s; }
+    .skill-row:hover { border-color: var(--accent); }
+    .skill-emoji { font-size: 1.2rem; width: 28px; text-align: center; }
+    .skill-info { flex: 1; }
+    .skill-name { font-size: 0.85rem; font-weight: 600; }
+    .skill-rank { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-top: 1px; }
+    .skill-xp-bar { width: 60px; }
+    .skill-xp-bg { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 3px; }
+    .skill-xp-fill { height: 100%; border-radius: 99px; background: var(--xp); transition: width 0.4s; }
+    .skill-lv { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--xp); text-align: right; }
+
+    /* MONTH NAV */
+    .month-nav { display: flex; gap: 6px; padding: 0 16px; max-width: 820px; margin: 0 auto 0; overflow-x: auto; scrollbar-width: none; }
+    .month-nav::-webkit-scrollbar { display: none; }
+    .month-btn { flex-shrink: 0; background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.72rem; font-weight: 700; padding: 7px 12px; cursor: pointer; transition: all 0.18s; text-align: center; white-space: nowrap; }
     .month-btn:hover:not(.locked-month) { border-color: var(--accent); color: var(--accent); }
-    .month-btn.active-m1 { border-color: var(--m1); color: var(--m1); background: rgba(200,241,53,0.08); }
-    .month-btn.active-m2 { border-color: var(--m2); color: var(--m2); background: rgba(56,189,248,0.08); }
-    .month-btn.active-m3 { border-color: var(--m3); color: var(--m3); background: rgba(249,115,22,0.08); }
+    .month-btn.active-m1{border-color:var(--m1);color:var(--m1);background:rgba(200,241,53,0.08);}
+    .month-btn.active-m2{border-color:var(--m2);color:var(--m2);background:rgba(56,189,248,0.08);}
+    .month-btn.active-m3{border-color:var(--m3);color:var(--m3);background:rgba(249,115,22,0.08);}
+    .month-btn.active-m4{border-color:var(--m4);color:var(--m4);background:rgba(167,139,250,0.08);}
+    .month-btn.active-m5{border-color:var(--m5);color:var(--m5);background:rgba(244,114,182,0.08);}
+    .month-btn.active-m6{border-color:var(--m6);color:var(--m6);background:rgba(52,211,153,0.08);}
     .month-btn.locked-month { opacity: 0.35; cursor: default; }
-    .month-label { font-size: 0.6rem; color: var(--muted); display: block; margin-top: 2px; font-family: 'Space Grotesk', sans-serif; font-weight: 400; }
+    .month-label { font-size: 0.58rem; color: var(--muted); display: block; margin-top: 2px; font-family: 'Space Grotesk', sans-serif; font-weight: 400; }
 
-    header { text-align: center; padding: 28px 20px 20px; }
-    .eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
-    h1 { font-size: clamp(1.6rem, 5vw, 2.8rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
-    h1 span { color: var(--accent); }
-    .subtitle { margin-top: 8px; color: var(--muted); font-size: 0.85rem; }
-
+    /* SECTION */
     .section { display: none; padding: 0 16px; max-width: 820px; margin: 0 auto; }
     .section.active { display: block; }
 
     /* DASHBOARD */
-    .dashboard { margin: 18px 0 24px; display: flex; flex-direction: column; gap: 12px; }
-    .dash-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+    .dashboard { margin: 14px 0 18px; display: flex; flex-direction: column; gap: 10px; }
     .dash-hero { display: flex; gap: 10px; }
-    .dash-big { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 12px; text-align: center; }
-    .dash-big-val { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1; }
-    .dash-big-label { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
-    .dash-months { display: flex; gap: 8px; }
-    .dash-month-card { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; }
+    .dash-big { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; text-align: center; }
+    .dash-big-val { font-family: 'Space Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--accent); line-height: 1; }
+    .dash-big-label { font-size: 0.68rem; color: var(--muted); margin-top: 5px; }
+    .dash-months { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+    .dash-months::-webkit-scrollbar { display: none; }
+    .dash-month-card { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; min-width: 70px; }
     .dash-month-val { font-family: 'Space Mono', monospace; font-size: 1rem; font-weight: 700; }
-    .dash-month-label { font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
-    .dash-month-sub { font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
-    .c-m1 { color: var(--m1); } .c-m2 { color: var(--m2); } .c-m3 { color: var(--m3); }
-    .dash-bar-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
-    .dash-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .dash-month-label { font-size: 0.6rem; color: var(--muted); margin-top: 3px; }
+    .dash-month-sub { font-size: 0.56rem; color: var(--muted); margin-top: 2px; }
+    .c-m1{color:var(--m1);} .c-m2{color:var(--m2);} .c-m3{color:var(--m3);}
+    .c-m4{color:var(--m4);} .c-m5{color:var(--m5);} .c-m6{color:var(--m6);}
+    .dash-bar-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+    .dash-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
     .dash-bar-row:last-child { margin-bottom: 0; }
-    .dash-bar-name { font-size: 0.72rem; color: var(--muted); width: 40px; flex-shrink: 0; }
-    .dash-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .dash-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
-    .dash-bar-pct { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted); width: 32px; text-align: right; }
+    .dash-bar-name { font-size: 0.68rem; color: var(--muted); width: 38px; flex-shrink: 0; }
+    .dash-bar-bg { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .dash-bar-fill { height: 100%; border-radius: 99px; }
+    .dash-bar-pct { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 30px; text-align: right; }
 
-    .section-topbar { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 14px; flex-wrap: wrap; gap: 10px; }
+    /* TOPBAR */
+    .section-topbar { display: flex; align-items: center; justify-content: space-between; margin: 14px 0; flex-wrap: wrap; gap: 10px; }
     .topbar-info { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.8; }
-    .topbar-info strong { color: var(--accent); font-size: 1.05rem; }
-    .btn-adjust { background: transparent; border: 1.5px solid var(--border); border-radius: 99px; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 600; padding: 6px 14px; cursor: pointer; transition: all 0.18s; }
+    .topbar-info strong { color: var(--accent); font-size: 1rem; }
+    .topbar-btns { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+    .btn-adjust { background: transparent; border: 1.5px solid var(--border); border-radius: 99px; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: all 0.18s; }
     .btn-adjust:hover { border-color: var(--accent); color: var(--accent); }
 
-    .changelog { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+    /* CHANGELOG */
+    .changelog { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
     .changelog-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-    .changelog-entry { background: var(--surface); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; padding: 8px 12px; font-size: 0.8rem; line-height: 1.5; }
-    .changelog-entry .cl-meta { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--accent); margin-bottom: 3px; }
+    .changelog-entry { background: var(--surface); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; padding: 7px 10px; font-size: 0.78rem; line-height: 1.5; }
+    .changelog-entry .cl-meta { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--accent); margin-bottom: 2px; }
     .changelog-entry .cl-reason { color: var(--muted); }
 
-    .config-bar { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-    .config-bar label { display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
-    .config-bar input { background: var(--card); border: 1.5px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 1rem; padding: 8px 12px; width: 100px; transition: border-color 0.18s; }
+    /* CONFIG */
+    .config-bar { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .config-bar label { display: flex; flex-direction: column; gap: 5px; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+    .config-bar input { background: var(--card); border: 1.5px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 1rem; padding: 7px 10px; width: 100px; }
     .config-bar input:focus { outline: none; border-color: var(--accent); }
-    .config-bar button { background: var(--accent); border: none; border-radius: 6px; color: #0d0d0d; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 9px 18px; cursor: pointer; }
+    .config-bar button { background: var(--accent); border: none; border-radius: 6px; color: #0d0d0d; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 8px 16px; cursor: pointer; }
 
-    .progress-wrap { margin-bottom: 18px; }
-    .progress-meta { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    /* PROGRESS */
+    .progress-wrap { margin-bottom: 16px; }
+    .progress-meta { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 7px; }
     .progress-meta strong { color: var(--done); }
     .bar-bg { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
-    .bar-m1 { background: linear-gradient(90deg, var(--done), var(--m1)); }
-    .bar-m2 { background: linear-gradient(90deg, var(--done), var(--m2)); }
-    .bar-m3 { background: linear-gradient(90deg, var(--done), var(--m3)); }
+    .bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+    .bar-m1{background:linear-gradient(90deg,var(--done),var(--m1));}
+    .bar-m2{background:linear-gradient(90deg,var(--done),var(--m2));}
+    .bar-m3{background:linear-gradient(90deg,var(--done),var(--m3));}
+    .bar-m4{background:linear-gradient(90deg,var(--done),var(--m4));}
+    .bar-m5{background:linear-gradient(90deg,var(--done),var(--m5));}
+    .bar-m6{background:linear-gradient(90deg,var(--done),var(--m6));}
 
-    .stats { display: flex; gap: 10px; margin-bottom: 18px; }
-    .stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 8px; text-align: center; }
-    .stat-val { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-    .stat-label { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+    /* STATS */
+    .stats { display: flex; gap: 8px; margin-bottom: 16px; }
+    .stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 6px; text-align: center; }
+    .stat-val { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
 
+    /* GRID */
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
     .card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 10px 8px 9px; cursor: pointer; user-select: none; transition: border-color 0.18s, background 0.18s, transform 0.1s; display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; }
-    .card:hover:not(.done) { border-color: var(--accent); background: var(--accent-dim); }
+    .card:hover:not(.done):not(.failed) { border-color: var(--accent); background: var(--accent-dim); }
     .card:active { transform: scale(0.96); }
     .card.done { border-color: var(--done); background: var(--done-dim); }
+    .card.failed { border-color: var(--fail); background: var(--fail-dim); }
     .card-date { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
     .card.done .card-date { color: var(--done); }
-    .day-num { font-size: 0.62rem; color: var(--muted); }
+    .card.failed .card-date { color: var(--fail); }
+    .day-num { font-size: 0.6rem; color: var(--muted); }
     .check-ring { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.18s; }
     .card.done .check-ring { border-color: var(--done); background: rgba(74,222,128,0.18); }
+    .card.failed .check-ring { border-color: var(--fail); background: rgba(248,113,113,0.15); }
     .checkmark { opacity: 0; transform: scale(0.4); transition: opacity 0.2s, transform 0.2s; }
-    .card.done .checkmark { opacity: 1; transform: scale(1); }
-    .card-reps { font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+    .card.done .checkmark, .card.failed .checkmark { opacity: 1; transform: scale(1); }
+    .card-reps { font-size: 0.66rem; font-weight: 600; color: var(--muted); }
     .card.done .card-reps { color: var(--done); }
-    .card.failed { border-color: #f87171; background: rgba(248,113,113,0.08); }
-    .card.failed .card-date { color: #f87171; }
-    .card.failed .card-reps { color: #f87171; }
-    .card.failed .check-ring { border-color: #f87171; background: rgba(248,113,113,0.15); }
-    .card.failed .day-num { color: #f87171; }
-    /* ACTION SHEET */
-    .action-sheet-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; padding-bottom:20px; }
-    .action-sheet-backdrop.open { display:flex; }
-    .action-sheet { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; width:100%; max-width:400px; overflow:hidden; }
-    .action-sheet-title { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:14px 16px 10px; letter-spacing:0.1em; text-transform:uppercase; border-bottom:1px solid var(--border); }
-    .action-sheet-btn { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:pointer; border:none; background:transparent; color:var(--text); font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; width:100%; border-bottom:1px solid var(--border); transition:background 0.15s; }
-    .action-sheet-btn:last-child { border-bottom:none; }
-    .action-sheet-btn:hover { background:var(--card); }
-    .action-sheet-btn.success { color:var(--done); }
-    .action-sheet-btn.fail { color:#f87171; }
-    .action-sheet-btn.clear { color:var(--muted); }
-    .action-sheet-icon { font-size:1.3rem; width:28px; text-align:center; }
-
-    .note-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; cursor: pointer; font-size: 11px; opacity: 0.3; transition: opacity 0.18s; padding: 2px; line-height: 1; }
-
+    .card.failed .card-reps { color: var(--fail); }
+    .note-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; cursor: pointer; font-size: 11px; opacity: 0.25; transition: opacity 0.18s; padding: 2px; line-height: 1; }
     .card:hover .note-btn, .note-btn.has-note { opacity: 1; }
-    .x-btn { position: absolute; bottom: 4px; left: 5px; background: none; border: none; cursor: pointer; font-size: 13px; opacity: 0.25; transition: opacity 0.18s; padding: 2px; line-height: 1; }
+    .x-btn { position: absolute; bottom: 4px; left: 4px; background: none; border: none; cursor: pointer; font-size: 12px; opacity: 0.2; transition: opacity 0.18s; padding: 2px; line-height: 1; }
     .card:hover .x-btn { opacity: 0.7; }
-    .card.failed .x-btn { opacity: 1; color: #f87171; }
+    .card.failed .x-btn { opacity: 1; }
 
+    /* LOCKED */
     .locked-overlay { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 50px 20px; text-align: center; color: var(--muted); }
     .lock-icon { font-size: 2.2rem; }
     .locked-overlay p { font-size: 0.88rem; line-height: 1.6; max-width: 300px; }
     .month-locked { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 20px; text-align: center; color: var(--muted); }
     .month-locked p { font-size: 0.85rem; line-height: 1.6; max-width: 300px; }
 
+    /* MODALS */
     .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
     .modal-backdrop.open { display: flex; }
     .modal { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 22px; width: 100%; max-width: 390px; display: flex; flex-direction: column; gap: 14px; }
@@ -150,8 +195,9 @@
     .modal-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .modal-label span { color: #f87171; font-size: 0.7rem; }
     .modal input, .modal textarea { background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem; padding: 10px 12px; transition: border-color 0.18s; }
-    .modal input { font-family: 'Space Mono', monospace; font-size: 1.1rem; width: 130px; }
-    .modal textarea { resize: vertical; min-height: 90px; line-height: 1.6; width: 100%; }
+    .modal input[type=number] { font-family: 'Space Mono', monospace; font-size: 1.1rem; width: 130px; }
+    .modal input[type=date] { width: 100%; }
+    .modal textarea { resize: vertical; min-height: 80px; line-height: 1.6; width: 100%; }
     .modal input:focus, .modal textarea:focus { outline: none; border-color: var(--accent); }
     .modal textarea::placeholder, .modal input::placeholder { color: var(--muted); }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -159,19 +205,25 @@
     .btn-secondary { background: transparent; border: 1.5px solid var(--border); border-radius: 7px; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; padding: 9px 14px; cursor: pointer; }
     .btn-secondary:hover { border-color: #f87171; color: #f87171; }
 
-    @media (max-width: 480px) { .grid { grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); } .stats { gap: 6px; } .stat-val { font-size: 1rem; } }
+    /* ACHIEVEMENT POPUP */
+    .achievement-popup { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); border: 1.5px solid var(--xp); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; z-index: 500; transition: transform 0.4s ease; max-width: 320px; width: 90%; }
+    .achievement-popup.show { transform: translateX(-50%) translateY(0); }
+    .achievement-popup-icon { font-size: 1.8rem; }
+    .achievement-popup-text { flex: 1; }
+    .achievement-popup-title { font-size: 0.7rem; color: var(--xp); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
+    .achievement-popup-name { font-weight: 700; font-size: 0.95rem; }
+
+    @media (max-width: 480px) { .grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } .stats { gap: 6px; } }
   </style>
 </head>
 <body>
 
 <nav id="nav"></nav>
 
+<!-- Modals -->
 <div class="modal-backdrop" id="modal-note">
   <div class="modal">
-    <div class="modal-header">
-      <div><div class="modal-title" id="note-title">Nota</div><div class="modal-sub" id="note-sub"></div></div>
-      <button class="modal-close" id="note-close">✕</button>
-    </div>
+    <div class="modal-header"><div><div class="modal-title" id="note-title">Nota</div><div class="modal-sub" id="note-sub"></div></div><button class="modal-close" id="note-close">✕</button></div>
     <div class="modal-field"><div class="modal-label">Nota do dia</div><textarea id="note-text" placeholder="Como correu? Dificuldades, sensações, motivação..."></textarea></div>
     <div class="modal-actions"><button class="btn-secondary" id="note-delete">Apagar</button><button class="btn-primary" id="note-save">Guardar</button></div>
   </div>
@@ -179,179 +231,237 @@
 
 <div class="modal-backdrop" id="modal-adjust">
   <div class="modal">
-    <div class="modal-header">
-      <div><div class="modal-title" id="adjust-title">Ajustar valor</div><div class="modal-sub" id="adjust-sub"></div></div>
-      <button class="modal-close" id="adjust-close">✕</button>
-    </div>
-    <div class="modal-field"><div class="modal-label">Novo valor</div><input type="number" id="adjust-val" min="1" placeholder="ex: 30"></div>
-    <div class="modal-field"><div class="modal-label">Motivo <span>(obrigatório)</span></div><textarea id="adjust-reason" placeholder="Ex: foco na respiração..."></textarea></div>
-    <div class="modal-actions"><button class="btn-secondary" id="adjust-cancel">Cancelar</button><button class="btn-primary" id="adjust-save">Confirmar alteração</button></div>
+    <div class="modal-header"><div><div class="modal-title" id="adjust-title">Ajustar valor</div><div class="modal-sub" id="adjust-sub"></div></div><button class="modal-close" id="adjust-close">✕</button></div>
+    <div class="modal-field"><div class="modal-label">Novo valor</div><input type="number" id="adjust-val" min="1" placeholder="ex: 35"></div>
+    <div class="modal-field"><div class="modal-label">Motivo <span>(obrigatório)</span></div><textarea id="adjust-reason" placeholder="Ex: progressão natural, mais confortável..."></textarea></div>
+    <div class="modal-actions"><button class="btn-secondary" id="adjust-cancel">Cancelar</button><button class="btn-primary" id="adjust-save">Confirmar</button></div>
   </div>
 </div>
 
-<!-- Modal: Editar data de início -->
 <div class="modal-backdrop" id="modal-date">
   <div class="modal">
-    <div class="modal-header">
-      <div><div class="modal-title" id="date-title">Corrigir data de início</div><div class="modal-sub" id="date-sub"></div></div>
-      <button class="modal-close" id="date-close">✕</button>
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">Data de início</div>
-      <input type="date" id="date-val" style="width:100%;font-size:1rem">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" id="date-cancel">Cancelar</button>
-      <button class="btn-primary" id="date-save">Guardar</button>
-    </div>
+    <div class="modal-header"><div><div class="modal-title" id="date-title">Corrigir data</div><div class="modal-sub" id="date-sub"></div></div><button class="modal-close" id="date-close">✕</button></div>
+    <div class="modal-field"><div class="modal-label">Data de início</div><input type="date" id="date-val"></div>
+    <div class="modal-actions"><button class="btn-secondary" id="date-cancel">Cancelar</button><button class="btn-primary" id="date-save">Guardar</button></div>
   </div>
 </div>
 
-<header>
-  <p class="eyebrow">Desafio · One Punch Man</p>
-  <h1>90 Dias de<br><span id="header-title">Flexões</span></h1>
-  <p class="subtitle" id="header-sub"></p>
-</header>
+<!-- Achievement popup -->
+<div class="achievement-popup" id="ach-popup">
+  <div class="achievement-popup-icon" id="ach-icon">🏅</div>
+  <div class="achievement-popup-text">
+    <div class="achievement-popup-title">Conquista Desbloqueada!</div>
+    <div class="achievement-popup-name" id="ach-name"></div>
+  </div>
+</div>
 
+<div id="hero-wrap"></div>
 <div id="month-nav-wrap"></div>
 <div id="sections"></div>
 
-<!-- Action Sheet -->
-<div class="action-sheet-backdrop" id="action-sheet">
-  <div class="action-sheet">
-    <div class="action-sheet-title" id="action-sheet-title">Dia 1 · Qua 17 Jun</div>
-    <button class="action-sheet-btn success" id="action-done">
-      <span class="action-sheet-icon">✅</span> Concluído
-    </button>
-    <button class="action-sheet-btn fail" id="action-fail">
-      <span class="action-sheet-icon">❌</span> Falhado
-    </button>
-    <button class="action-sheet-btn clear" id="action-clear">
-      <span class="action-sheet-icon">↩️</span> Limpar
-    </button>
-  </div>
-</div>
-
 <script>
-const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const PT_DAYS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const FLEXOES_MONTH_STARTS = [new Date(2026,5,17), new Date(2026,6,17), new Date(2026,7,16)];
+const PT_MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PT_DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
-function getMonthStart(catId, mi) {
-  const m = state[catId].months[mi];
-  // Manual date always wins, for all categories
-  if (m.manualDate) return new Date(m.manualDate);
-  // Flexoes fallback to hardcoded dates
-  if (catId === 'flexoes') return new Date(FLEXOES_MONTH_STARTS[mi]);
-  // Other cats: infer from previous month or use today
-  if (mi === 0) return new Date();
-  const prev = state[catId].months[mi-1];
-  if (prev.manualDate) { const d = new Date(prev.manualDate); d.setDate(d.getDate()+30); return d; }
-  return new Date();
-}
+const FLEXOES_MONTH_STARTS=[new Date(2026,5,17),new Date(2026,6,17),new Date(2026,7,16),new Date(2026,8,15),new Date(2026,9,15),new Date(2026,10,14)];
+const MONTH_LABELS=['Mês 1','Mês 2','Mês 3','Mês 4','Mês 5','Mês 6'];
+const MONTH_COLORS=['m1','m2','m3','m4','m5','m6'];
+const DAYS_PER_MONTH=30;
 
-function setMonthStart(catId, mi, dateStr) {
-  // Strip any bad startDate and store as manualDate
-  delete state[catId].months[mi].startDate;
-  state[catId].months[mi].manualDate = dateStr; // store as YYYY-MM-DD string
-  saveState();
-}
-const MONTH_LABELS  = ['Mês 1','Mês 2','Mês 3'];
-const MONTH_COLORS  = ['m1','m2','m3'];
-const DAYS_PER_MONTH = 30;
-const TOTAL_MONTHS   = 3;
-
-const CATEGORIES = [
-  { id:'flexoes',    label:'Flexões',    emoji:'💪', unit:'reps', max:100, defaultReps:30,  preDone:25, configurable:false },
-  { id:'squats',     label:'Squats',     emoji:'🦵', unit:'reps', max:100, defaultReps:null, preDone:0, configurable:true },
-  { id:'abdominais', label:'Abdominais', emoji:'🔥', unit:'reps', max:100, defaultReps:null, preDone:0, configurable:true },
-  { id:'corrida',    label:'Corrida',    emoji:'🏃', unit:'km',   max:5,   defaultReps:null, preDone:0, configurable:true }
+const CATEGORIES=[
+  {id:'flexoes',    label:'Flexões',    emoji:'💪', unit:'reps', max:100, defaultReps:30, preDone:25, configurable:false, totalMonths:6, xpPerDay:10},
+  {id:'squats',     label:'Squats',     emoji:'🦵', unit:'reps', max:100, defaultReps:null, preDone:0, configurable:true,  totalMonths:3, xpPerDay:10},
+  {id:'abdominais', label:'Abdominais', emoji:'🔥', unit:'reps', max:100, defaultReps:null, preDone:0, configurable:true,  totalMonths:3, xpPerDay:10},
+  {id:'corrida',    label:'Corrida',    emoji:'🏃', unit:'km',   max:5,   defaultReps:null, preDone:0, configurable:true,  totalMonths:3, xpPerDay:15}
 ];
 
-const KEY = 'opm_challenge_v2';
+// Skill ranks by level
+const RANKS=[
+  {min:0,  label:'Iniciante',   emoji:'🌱'},
+  {min:3,  label:'Aprendiz',    emoji:'⚡'},
+  {min:7,  label:'Intermédio',  emoji:'🔥'},
+  {min:12, label:'Avançado',    emoji:'💎'},
+  {min:18, label:'Elite',       emoji:'🦅'},
+  {min:25, label:'Mestre',      emoji:'👑'}
+];
 
-function defaultMonthData(cat, mi) {
-  const preDone = mi === 0 ? cat.preDone : 0;
+// Achievements: based on consistency (streak + total days)
+const ACHIEVEMENTS=[
+  {id:'streak7',   icon:'🔥', name:'Uma Semana Seguida',    desc:'7 dias consecutivos',      check: s => s.maxStreak >= 7},
+  {id:'streak21',  icon:'💫', name:'Hábito a Formar',       desc:'21 dias consecutivos',     check: s => s.maxStreak >= 21},
+  {id:'streak66',  icon:'🧠', name:'Hábito Automático',     desc:'66 dias consecutivos',     check: s => s.maxStreak >= 66},
+  {id:'streak90',  icon:'👑', name:'Mestre da Consistência',desc:'90 dias consecutivos',     check: s => s.maxStreak >= 90},
+  {id:'total7',    icon:'✅', name:'Primeiros Passos',      desc:'7 dias totais concluídos', check: s => s.totalDone >= 7},
+  {id:'total21',   icon:'🏃', name:'Em Movimento',          desc:'21 dias totais',           check: s => s.totalDone >= 21},
+  {id:'total66',   icon:'⚡', name:'Força de Vontade',      desc:'66 dias totais',           check: s => s.totalDone >= 66},
+  {id:'total90',   icon:'🏆', name:'Atleta Atómico',        desc:'90 dias totais concluídos',check: s => s.totalDone >= 90},
+];
+
+const KEY='opm_challenge_v2';
+
+function getCatTotalMonths(catId){ return CATEGORIES.find(c=>c.id===catId).totalMonths; }
+
+function defaultMonthData(cat,mi){
+  const preDone=mi===0?cat.preDone:0;
   return {
-    reps: mi === 0 ? cat.defaultReps : null,
-    unlocked: mi === 0 ? !cat.configurable : false,
-    days: Array.from({length: DAYS_PER_MONTH}, (_, i) => i < preDone ? (cat.defaultReps || null) : null),
-    notes: {}, changelog: []
+    reps: mi===0?cat.defaultReps:null,
+    unlocked: mi===0?!cat.configurable:false,
+    days: Array.from({length:DAYS_PER_MONTH},(_,i)=>i<preDone?(cat.defaultReps||null):null),
+    notes:{}, changelog:[]
   };
 }
 
-function defaultState() {
-  const s = {};
-  CATEGORIES.forEach(cat => { s[cat.id] = { months: Array.from({length:TOTAL_MONTHS}, (_,mi) => defaultMonthData(cat,mi)) }; });
+function defaultState(){
+  const s={unlockedAchievements:[]};
+  CATEGORIES.forEach(cat=>{s[cat.id]={months:Array.from({length:cat.totalMonths},(_,mi)=>defaultMonthData(cat,mi))};});
   return s;
 }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const s = JSON.parse(raw);
-      CATEGORIES.forEach(cat => {
-        if (!s[cat.id]) { s[cat.id] = defaultState()[cat.id]; return; }
-        // migrate flat v6 structure → months array
-        if (!s[cat.id].months) {
-          const old = s[cat.id];
-          s[cat.id] = { months: Array.from({length:TOTAL_MONTHS}, (_,mi) => {
-            if (mi === 0) return {
-              reps: old.reps, unlocked: old.unlocked !== undefined ? old.unlocked : !cat.configurable,
-              days: old.days || Array(DAYS_PER_MONTH).fill(null),
-              notes: old.notes || {}, changelog: old.changelog || []
-            };
-            return defaultMonthData(cat, mi);
+function loadState(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){
+      const s=JSON.parse(raw);
+      if(!s.unlockedAchievements) s.unlockedAchievements=[];
+      CATEGORIES.forEach(cat=>{
+        if(!s[cat.id]) s[cat.id]={months:Array.from({length:cat.totalMonths},(_,mi)=>defaultMonthData(cat,mi))};
+        if(!s[cat.id].months){
+          const old=s[cat.id];
+          s[cat.id]={months:Array.from({length:cat.totalMonths},(_,mi)=>{
+            if(mi===0) return {reps:old.reps,unlocked:old.unlocked!==undefined?old.unlocked:!cat.configurable,days:old.days||Array(DAYS_PER_MONTH).fill(null),notes:old.notes||{},changelog:old.changelog||[]};
+            return defaultMonthData(cat,mi);
           })};
         }
-        s[cat.id].months.forEach(m => {
-          if (!m.notes) m.notes = {};
-          if (!m.changelog) m.changelog = [];
-          if (m.days && typeof m.days[0] === 'boolean') m.days = m.days.map(d => d ? (m.reps || 30) : null);
-        // remove corrupted startDate from previous versions
-        if (m.startDate) { delete m.startDate; }
+        s[cat.id].months.forEach(m=>{
+          if(!m.notes) m.notes={};
+          if(!m.changelog) m.changelog=[];
+          if(m.days&&typeof m.days[0]==='boolean') m.days=m.days.map(d=>d?(m.reps||30):null);
+          if(m.startDate){delete m.startDate;}
         });
-        // auto-unlock month 2/3 if previous is complete
-        for (let mi = 1; mi < TOTAL_MONTHS; mi++) {
-          const prev = s[cat.id].months[mi-1];
-          const prevDone = prev.days.filter(d => d !== null).length;
-          if (prevDone >= DAYS_PER_MONTH && !s[cat.id].months[mi].unlocked) {
-            // don't auto-unlock, just make it startable — handled in render
-          }
-        }
+        while(s[cat.id].months.length<cat.totalMonths) s[cat.id].months.push(defaultMonthData(cat,s[cat.id].months.length));
       });
       return s;
     }
-  } catch(e) {}
+  }catch(e){}
   return defaultState();
 }
 
-function saveState() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function saveState(){ localStorage.setItem(KEY,JSON.stringify(state)); }
 
-let state = loadState();
-let activeTab   = 'flexoes';
-let activeMonth = 0;
+let state=loadState();
+let activeTab='flexoes';
+let activeMonth=0;
 
-function dayDate(mi, di, catId) { catId=catId||activeTab; const d = getMonthStart(catId, mi); d.setDate(d.getDate()+di); return d; }
-function fmtDate(d) { return PT_DAYS[d.getDay()]+' '+d.getDate()+' '+PT_MONTHS[d.getMonth()]; }
-function fmtNow()   { const d = new Date(); return fmtDate(d)+' '+d.getFullYear(); }
+// ── HELPERS ───────────────────────────────────────────────
+function getMonthStart(catId,mi){
+  const m=state[catId].months[mi];
+  if(m.manualDate) return new Date(m.manualDate);
+  if(catId==='flexoes') return new Date(FLEXOES_MONTH_STARTS[mi]);
+  if(mi===0) return new Date();
+  const prev=state[catId].months[mi-1];
+  if(prev.manualDate){const d=new Date(prev.manualDate);d.setDate(d.getDate()+30);return d;}
+  return new Date();
+}
+function dayDate(mi,di,catId){catId=catId||activeTab;const d=getMonthStart(catId,mi);d.setDate(d.getDate()+di);return d;}
+function fmtDate(d){return PT_DAYS[d.getDay()]+' '+d.getDate()+' '+PT_MONTHS[d.getMonth()];}
+function fmtNow(){const d=new Date();return fmtDate(d)+' '+d.getFullYear();}
+
+// ── XP & LEVELS ───────────────────────────────────────────
+function calcCatXP(catId){
+  const cat=CATEGORIES.find(c=>c.id===catId);
+  return state[catId].months.reduce((s,m)=>s+m.days.filter(d=>d!==null&&d!=='x').length,0)*cat.xpPerDay;
+}
+function calcTotalXP(){ return CATEGORIES.reduce((s,cat)=>s+calcCatXP(cat.id),0); }
+function xpToLevel(xp){ return Math.floor(Math.sqrt(xp/50)); }
+function levelToXP(lv){ return lv*lv*50; }
+function getRank(lv){ let r=RANKS[0]; for(const rank of RANKS){ if(lv>=rank.min) r=rank; } return r; }
+
+// ── STREAK & STATS ────────────────────────────────────────
+function calcGlobalStats(){
+  // All days across all cats flattened with dates
+  let totalDone=0, allDays=[];
+  CATEGORIES.forEach(cat=>{
+    state[cat.id].months.forEach((m,mi)=>{
+      m.days.forEach((v,di)=>{
+        if(v!==null&&v!=='x'){
+          totalDone++;
+          allDays.push(dayDate(mi,di,cat.id).toDateString());
+        }
+      });
+    });
+  });
+  // unique dates with at least one activity
+  const uniqueDates=[...new Set(allDays)].sort();
+  let streak=0,maxStreak=0,cur=0;
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let i=0;i<uniqueDates.length;i++){
+    if(i===0){cur=1;}
+    else{
+      const prev=new Date(uniqueDates[i-1]),curr=new Date(uniqueDates[i]);
+      const diff=(curr-prev)/(1000*60*60*24);
+      cur=diff===1?cur+1:1;
+    }
+    if(cur>maxStreak) maxStreak=cur;
+  }
+  // current streak (must include today or yesterday)
+  if(uniqueDates.length>0){
+    const last=new Date(uniqueDates[uniqueDates.length-1]); last.setHours(0,0,0,0);
+    const diff=(today-last)/(1000*60*60*24);
+    if(diff<=1){
+      streak=1;
+      for(let i=uniqueDates.length-2;i>=0;i--){
+        const a=new Date(uniqueDates[i]),b=new Date(uniqueDates[i+1]);
+        if((b-a)/(1000*60*60*24)===1) streak++;
+        else break;
+      }
+    }
+  }
+  return {totalDone,streak,maxStreak};
+}
+
+// ── ACHIEVEMENTS ──────────────────────────────────────────
+function checkAchievements(){
+  const stats=calcGlobalStats();
+  const newlyUnlocked=[];
+  ACHIEVEMENTS.forEach(ach=>{
+    if(!state.unlockedAchievements.includes(ach.id)&&ach.check(stats)){
+      state.unlockedAchievements.push(ach.id);
+      newlyUnlocked.push(ach);
+    }
+  });
+  if(newlyUnlocked.length>0){
+    saveState();
+    showAchievementPopup(newlyUnlocked[0]);
+  }
+}
+
+let popupTimer=null;
+function showAchievementPopup(ach){
+  document.getElementById('ach-icon').textContent=ach.icon;
+  document.getElementById('ach-name').textContent=ach.name;
+  const popup=document.getElementById('ach-popup');
+  popup.classList.add('show');
+  if(popupTimer) clearTimeout(popupTimer);
+  popupTimer=setTimeout(()=>popup.classList.remove('show'),4000);
+}
 
 // ── MODALS ────────────────────────────────────────────────
-let noteCtx={catId:null,mi:null,di:null}, adjustCtx={catId:null,mi:null};
+let noteCtx={catId:null,mi:null,di:null};
+let adjustCtx={catId:null,mi:null};
+let dateCtx={catId:null,mi:null};
 
-function openNote(catId,mi,di,e) {
+function openNote(catId,mi,di,e){
   e.stopPropagation(); noteCtx={catId,mi,di};
-  const cat=CATEGORIES.find(c=>c.id===catId), m=state[catId].months[mi];
+  const cat=CATEGORIES.find(c=>c.id===catId),m=state[catId].months[mi];
   document.getElementById('note-title').textContent=cat.emoji+' '+cat.label+' — '+MONTH_LABELS[mi]+' Dia '+(di+1);
-  document.getElementById('note-sub').textContent=fmtDate(dayDate(mi,di));
+  document.getElementById('note-sub').textContent=fmtDate(dayDate(mi,di,catId));
   document.getElementById('note-text').value=(m.notes||{})[di]||'';
   document.getElementById('modal-note').classList.add('open');
   setTimeout(()=>document.getElementById('note-text').focus(),50);
 }
 function closeNote(){document.getElementById('modal-note').classList.remove('open');}
 function saveNote(){
-  const val=document.getElementById('note-text').value.trim(), m=state[noteCtx.catId].months[noteCtx.mi];
+  const val=document.getElementById('note-text').value.trim(),m=state[noteCtx.catId].months[noteCtx.mi];
   if(!m.notes)m.notes={};
   if(val)m.notes[noteCtx.di]=val; else delete m.notes[noteCtx.di];
   saveState();closeNote();render();
@@ -361,11 +471,12 @@ function deleteNote(){
   if(m.notes)delete m.notes[noteCtx.di];
   saveState();closeNote();render();
 }
+
 function openAdjust(catId,mi){
   adjustCtx={catId,mi};
-  const cat=CATEGORIES.find(c=>c.id===catId), m=state[catId].months[mi];
+  const cat=CATEGORIES.find(c=>c.id===catId),m=state[catId].months[mi];
   document.getElementById('adjust-title').textContent=cat.emoji+' Ajustar '+cat.label+' — '+MONTH_LABELS[mi];
-  document.getElementById('adjust-sub').textContent='Valor atual: '+(m.reps||'—')+' '+cat.unit+'  ·  Objetivo: '+cat.max+' '+cat.unit;
+  document.getElementById('adjust-sub').textContent='Atual: '+(m.reps||'—')+' '+cat.unit+' · Objetivo: '+cat.max+' '+cat.unit;
   document.getElementById('adjust-val').value=m.reps||'';
   document.getElementById('adjust-reason').value='';
   document.getElementById('modal-adjust').classList.add('open');
@@ -375,36 +486,32 @@ function closeAdjust(){document.getElementById('modal-adjust').classList.remove(
 function saveAdjust(){
   const val=parseInt(document.getElementById('adjust-val').value);
   const reason=document.getElementById('adjust-reason').value.trim();
-  if(!val||val<1){alert('Introduz um valor válido.');return;}
+  if(!val||val<1){alert('Valor inválido.');return;}
   if(!reason){alert('Escreve o motivo!');return;}
-  const {catId,mi}=adjustCtx, cat=CATEGORIES.find(c=>c.id===catId), m=state[catId].months[mi];
+  const {catId,mi}=adjustCtx,cat=CATEGORIES.find(c=>c.id===catId),m=state[catId].months[mi];
   m.changelog.push({date:fmtNow(),from:m.reps,to:val,unit:cat.unit,reason});
   m.reps=val; saveState();closeAdjust();render();
 }
 
-let dateCtx={catId:null,mi:null};
 function openDateEdit(catId,mi){
   dateCtx={catId,mi};
   const cat=CATEGORIES.find(c=>c.id===catId);
-  document.getElementById('date-title').textContent='📅 Corrigir data — '+cat.label+' '+MONTH_LABELS[mi];
-  document.getElementById('date-sub').textContent='As datas dos dias vão ser recalculadas automaticamente';
+  document.getElementById('date-title').textContent='📅 '+cat.label+' — '+MONTH_LABELS[mi];
+  document.getElementById('date-sub').textContent='As datas dos dias são recalculadas automaticamente';
   const s=getMonthStart(catId,mi);
-  const iso=s.toISOString().split('T')[0];
-  document.getElementById('date-val').value=iso;
+  document.getElementById('date-val').value=s.toISOString().split('T')[0];
   document.getElementById('modal-date').classList.add('open');
 }
 function closeDateEdit(){document.getElementById('modal-date').classList.remove('open');}
 function saveDateEdit(){
   const val=document.getElementById('date-val').value;
   if(!val){alert('Seleciona uma data.');return;}
-  setMonthStart(dateCtx.catId,dateCtx.mi,val);
-  closeDateEdit();render();
+  state[dateCtx.catId].months[dateCtx.mi].manualDate=val;
+  delete state[dateCtx.catId].months[dateCtx.mi].startDate;
+  saveState();closeDateEdit();render();
 }
-document.getElementById('date-close').onclick=closeDateEdit;
-document.getElementById('date-cancel').onclick=closeDateEdit;
-document.getElementById('date-save').onclick=saveDateEdit;
-document.getElementById('modal-date').onclick=e=>{if(e.target===document.getElementById('modal-date'))closeDateEdit();};
 
+// Wire modals
 document.getElementById('note-close').onclick=closeNote;
 document.getElementById('note-save').onclick=saveNote;
 document.getElementById('note-delete').onclick=deleteNote;
@@ -413,9 +520,13 @@ document.getElementById('adjust-close').onclick=closeAdjust;
 document.getElementById('adjust-cancel').onclick=closeAdjust;
 document.getElementById('adjust-save').onclick=saveAdjust;
 document.getElementById('modal-adjust').onclick=e=>{if(e.target===document.getElementById('modal-adjust'))closeAdjust();};
+document.getElementById('date-close').onclick=closeDateEdit;
+document.getElementById('date-cancel').onclick=closeDateEdit;
+document.getElementById('date-save').onclick=saveDateEdit;
+document.getElementById('modal-date').onclick=e=>{if(e.target===document.getElementById('modal-date'))closeDateEdit();};
 
 // ── RENDER ────────────────────────────────────────────────
-function render(){renderNav();renderMonthNav();renderSection();renderHeader();}
+function render(){ renderNav(); renderHero(); renderMonthNav(); renderSection(); }
 
 function renderNav(){
   const nav=document.getElementById('nav'); nav.innerHTML='';
@@ -429,73 +540,118 @@ function renderNav(){
   });
 }
 
+function renderHero(){
+  const wrap=document.getElementById('hero-wrap'); wrap.innerHTML='';
+  const totalXP=calcTotalXP();
+  const lv=xpToLevel(totalXP);
+  const rank=getRank(lv);
+  const thisLvXP=levelToXP(lv);
+  const nextLvXP=levelToXP(lv+1);
+  const pct=Math.min(100,((totalXP-thisLvXP)/(nextLvXP-thisLvXP)*100)).toFixed(1);
+  const stats=calcGlobalStats();
+
+  const div=document.createElement('div'); div.className='hero';
+  div.innerHTML=`
+    <div class="hero-top">
+      <div class="avatar">${rank.emoji}</div>
+      <div class="hero-info">
+        <div class="hero-name">XP Daily · Personagem</div>
+        <div class="hero-level">Nível <span>${lv}</span> — ${rank.label}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Space Mono',monospace;font-size:1rem;color:var(--xp);font-weight:700">${totalXP} XP</div>
+        <div style="font-size:0.62rem;color:var(--muted)">próx. nível: ${nextLvXP} XP</div>
+      </div>
+    </div>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-meta"><span>XP Global</span><span class="xp-val">${totalXP - thisLvXP} / ${nextLvXP - thisLvXP} XP</span></div>
+      <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="streak-row">
+      <div class="streak-badge fire"><div class="streak-badge-val">🔥 ${stats.streak}</div><div class="streak-badge-label">Streak atual</div></div>
+      <div class="streak-badge"><div class="streak-badge-val">${stats.maxStreak}</div><div class="streak-badge-label">Melhor streak</div></div>
+      <div class="streak-badge"><div class="streak-badge-val">${stats.totalDone}</div><div class="streak-badge-label">Dias totais</div></div>
+    </div>`;
+
+  // Achievements
+  const achDiv=document.createElement('div'); achDiv.className='achievements';
+  achDiv.innerHTML='<div class="section-title">🏅 Conquistas</div>';
+  const grid=document.createElement('div'); grid.className='achievements-grid';
+  ACHIEVEMENTS.forEach(ach=>{
+    const unlocked=state.unlockedAchievements.includes(ach.id);
+    const b=document.createElement('div'); b.className='badge'+(unlocked?' unlocked':'');
+    b.innerHTML=`<span class="badge-icon">${ach.icon}</span><span>${ach.name}<br><span style="font-size:0.62rem;opacity:0.6">${ach.desc}</span></span>`;
+    grid.appendChild(b);
+  });
+  achDiv.appendChild(grid);
+  div.appendChild(achDiv);
+
+  // Skills overview
+  const skillsDiv=document.createElement('div'); skillsDiv.className='skills-overview';
+  skillsDiv.innerHTML='<div class="section-title">⚡ Skills</div>';
+  CATEGORIES.forEach(cat=>{
+    if(!state[cat.id].months[0].unlocked) return;
+    const xp=calcCatXP(cat.id);
+    const lv=xpToLevel(xp);
+    const rank=getRank(lv);
+    const thisLvXP=levelToXP(lv), nextLvXP=levelToXP(lv+1);
+    const pct=nextLvXP>thisLvXP?Math.min(100,((xp-thisLvXP)/(nextLvXP-thisLvXP)*100)).toFixed(0):100;
+    const row=document.createElement('div'); row.className='skill-row';
+    row.innerHTML=`
+      <div class="skill-emoji">${cat.emoji}</div>
+      <div class="skill-info">
+        <div class="skill-name">${cat.label}</div>
+        <div class="skill-rank">${rank.emoji} ${rank.label} · ${xp} XP</div>
+      </div>
+      <div class="skill-xp-bar">
+        <div class="skill-xp-bg"><div class="skill-xp-fill" style="width:${pct}%"></div></div>
+        <div class="skill-lv">Lv ${lv}</div>
+      </div>`;
+    row.onclick=()=>{activeTab=cat.id;activeMonth=0;render();};
+    skillsDiv.appendChild(row);
+  });
+  div.appendChild(skillsDiv);
+  wrap.appendChild(div);
+}
+
 function renderMonthNav(){
   const wrap=document.getElementById('month-nav-wrap'); wrap.innerHTML='';
   const div=document.createElement('div'); div.className='month-nav';
-  state[activeTab].months.forEach((m,mi)=>{
-    const done=m.days.filter(d=>d!==null).length;
-    const prevComplete = mi===0 || state[activeTab].months[mi-1].days.filter(d=>d!==null).length>=DAYS_PER_MONTH;
-    const canSee = m.unlocked || prevComplete;
-    const locked=!canSee;
+  const totalM=getCatTotalMonths(activeTab);
+  state[activeTab].months.slice(0,totalM).forEach((m,mi)=>{
+    const done=m.days.filter(d=>d!==null&&d!=='x').length;
+    const prevComplete=mi===0||state[activeTab].months[mi-1].days.filter(d=>d!==null&&d!=='x').length>=DAYS_PER_MONTH;
+    const canSee=m.unlocked||prevComplete;
     const btn=document.createElement('button');
-    btn.className='month-btn'+(locked?' locked-month':'')+(activeMonth===mi&&!locked?' active-'+MONTH_COLORS[mi]:'');
-    btn.innerHTML=MONTH_LABELS[mi]+'<span class="month-label">'+(locked?'🔒':done+'/30')+'</span>';
-    btn.onclick=()=>{if(!locked){activeMonth=mi;render();}};
+    btn.className='month-btn'+(canSee?'':' locked-month')+(activeMonth===mi&&canSee?' active-'+MONTH_COLORS[mi]:'');
+    btn.innerHTML=MONTH_LABELS[mi]+'<span class="month-label">'+(canSee?done+'/30':'🔒')+'</span>';
+    btn.onclick=()=>{if(canSee){activeMonth=mi;render();}};
     div.appendChild(btn);
   });
   wrap.appendChild(div);
 }
 
-function renderHeader(){
-  const cat=CATEGORIES.find(c=>c.id===activeTab), m=state[activeTab].months[activeMonth];
-  document.getElementById('header-title').textContent=cat.label;
-  const s=getMonthStart(activeTab, activeMonth);
-  document.getElementById('header-sub').textContent=MONTH_LABELS[activeMonth]+' · '+(m.reps?m.reps+' '+cat.unit+'/dia':'define o teu início')+' · '+fmtDate(s)+' '+s.getFullYear();
-}
+function renderDashboard(cat,container){
+  const months=state[cat.id].months;
+  const totalDays=months.reduce((s,m)=>s+m.days.filter(d=>d!==null&&d!=='x').length,0);
+  const totalReps=months.reduce((s,m)=>s+m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0),0);
+  const catXP=calcCatXP(cat.id);
+  const catLv=xpToLevel(catXP);
+  const rank=getRank(catLv);
 
-function renderDashboard(cat, container) {
-  const months = state[cat.id].months;
-  const totalDays  = months.reduce((s,m)=>s+m.days.filter(d=>d!==null&&d!=='x').length,0);
-  const totalReps  = months.reduce((s,m)=>s+m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0),0);
-  const totalGoal  = TOTAL_MONTHS * DAYS_PER_MONTH;
-
-  const dash = document.createElement('div');
-  dash.className='dashboard';
+  const dash=document.createElement('div'); dash.className='dashboard';
   dash.innerHTML=`
-    <div class="dash-title">📊 Dashboard geral</div>
+    <div class="section-title">📊 Dashboard · ${cat.label}</div>
     <div class="dash-hero">
-      <div class="dash-big">
-        <div class="dash-big-val">${totalDays}</div>
-        <div class="dash-big-label">Dias concluídos<br><span style="font-size:0.6rem;color:var(--muted)">${totalGoal} total</span></div>
-      </div>
-      <div class="dash-big">
-        <div class="dash-big-val">${totalReps.toLocaleString('pt-PT')}</div>
-        <div class="dash-big-label">Total ${cat.unit} feitas</div>
-      </div>
+      <div class="dash-big"><div class="dash-big-val">${totalDays}</div><div class="dash-big-label">Dias concluídos</div></div>
+      <div class="dash-big"><div class="dash-big-val">${totalReps>0?totalReps.toLocaleString('pt-PT'):'—'}</div><div class="dash-big-label">Total ${cat.unit}</div></div>
+      <div class="dash-big"><div class="dash-big-val" style="color:var(--xp)">${catXP}</div><div class="dash-big-label">XP · ${rank.emoji} Lv ${catLv}</div></div>
     </div>
     <div class="dash-months">
-      ${months.map((m,mi)=>{
-        const d=m.days.filter(x=>x!==null&&x!=='x').length;
-        const r=m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0);
-        const colors=['c-m1','c-m2','c-m3'];
-        return `<div class="dash-month-card">
-          <div class="dash-month-val ${colors[mi]}">${d}/30</div>
-          <div class="dash-month-label">${MONTH_LABELS[mi]}</div>
-          <div class="dash-month-sub">${r>0?r.toLocaleString('pt-PT')+' '+cat.unit:'—'}</div>
-        </div>`;
-      }).join('')}
+      ${months.map((m,mi)=>{const d=m.days.filter(x=>x!==null&&x!=='x').length,r=m.days.reduce((a,v)=>a+(typeof v==='number'?v:0),0);return`<div class="dash-month-card"><div class="dash-month-val c-${MONTH_COLORS[mi]}">${d}/30</div><div class="dash-month-label">${MONTH_LABELS[mi]}</div><div class="dash-month-sub">${r>0?r.toLocaleString('pt-PT')+' '+cat.unit:'—'}</div></div>`;}).join('')}
     </div>
     <div class="dash-bar-wrap">
-      ${months.map((m,mi)=>{
-        const d=m.days.filter(x=>x!==null&&x!=='x').length;
-        const pct=(d/DAYS_PER_MONTH*100).toFixed(0);
-        const barColors=['var(--m1)','var(--m2)','var(--m3)'];
-        return `<div class="dash-bar-row">
-          <div class="dash-bar-name">${MONTH_LABELS[mi]}</div>
-          <div class="dash-bar-bg"><div class="dash-bar-fill" style="width:${pct}%;background:${barColors[mi]}"></div></div>
-          <div class="dash-bar-pct">${pct}%</div>
-        </div>`;
-      }).join('')}
+      ${months.map((m,mi)=>{const d=m.days.filter(x=>x!==null&&x!=='x').length,pct=(d/DAYS_PER_MONTH*100).toFixed(0);const cols=['var(--m1)','var(--m2)','var(--m3)','var(--m4)','var(--m5)','var(--m6)'];return`<div class="dash-bar-row"><div class="dash-bar-name">${MONTH_LABELS[mi]}</div><div class="dash-bar-bg"><div class="dash-bar-fill" style="width:${pct}%;background:${cols[mi]}"></div></div><div class="dash-bar-pct">${pct}%</div></div>`;}).join('')}
     </div>`;
   container.appendChild(dash);
 }
@@ -511,40 +667,38 @@ function renderSection(){
     container.appendChild(sec);
     document.getElementById('btn-unlock').onclick=()=>{
       const val=parseInt(document.getElementById('unlock-inp').value);
-      if(!val||val<1){alert('Introduz um valor válido.');return;}
-      state[activeTab].months[0].unlocked=true; state[activeTab].months[0].reps=val;
+      if(!val||val<1){alert('Valor inválido.');return;}
+      state[activeTab].months[0].unlocked=true;state[activeTab].months[0].reps=val;
       state[activeTab].months[0].days=Array(DAYS_PER_MONTH).fill(null);
-      if (activeTab !== 'flexoes') { const td=new Date(); state[activeTab].months[0].manualDate=td.toISOString().split('T')[0]; }
+      const td=new Date();state[activeTab].months[0].manualDate=td.toISOString().split('T')[0];
       saveState();render();
     };
     return;
   }
 
-  // Dashboard always shown for unlocked categories
   container.appendChild(sec);
-  renderDashboard(cat, sec);
+  renderDashboard(cat,sec);
 
   const m=state[activeTab].months[activeMonth];
-  const prevComplete = activeMonth===0 || state[activeTab].months[activeMonth-1].days.filter(d=>d!==null).length>=DAYS_PER_MONTH;
+  const prevComplete=activeMonth===0||state[activeTab].months[activeMonth-1].days.filter(d=>d!==null&&d!=='x').length>=DAYS_PER_MONTH;
 
   if(!m.unlocked){
-    const prevDone=activeMonth>0?state[activeTab].months[activeMonth-1].days.filter(d=>d!==null).length:0;
+    const prevDone=activeMonth>0?state[activeTab].months[activeMonth-1].days.filter(d=>d!==null&&d!=='x').length:0;
     const faltam=DAYS_PER_MONTH-prevDone;
-    const canStart=prevComplete;
-    const extra=canStart?`<div class="config-bar" style="justify-content:center"><label>${cat.unit==='km'?'Distância (km)':'Reps'}<input type="number" id="month-unlock-inp" min="1" max="${cat.max}" placeholder="ex: ${state[activeTab].months[activeMonth-1].reps||''}"></label><button id="btn-month-unlock">Começar ${MONTH_LABELS[activeMonth]}</button></div>`:'';
-    const p=canStart?`Parabéns por completares o ${MONTH_LABELS[activeMonth-1]}!<br>Define o teu valor para o ${MONTH_LABELS[activeMonth]}.`:`Completa todos os dias do ${MONTH_LABELS[activeMonth-1]} para desbloquear.<br>Faltam ${faltam} dias.`;
     const ml=document.createElement('div'); ml.className='month-locked';
-    ml.innerHTML=`<div class="lock-icon">📅</div><p>${p}</p>${extra}`;
-    sec.appendChild(ml);
-    if(canStart){
+    if(prevComplete){
+      ml.innerHTML=`<div class="lock-icon">📅</div><p>Parabéns por completares o ${MONTH_LABELS[activeMonth-1]}!<br>Define o teu valor para o ${MONTH_LABELS[activeMonth]}.</p><div class="config-bar" style="justify-content:center"><label>${cat.unit==='km'?'Distância (km)':'Reps'}<input type="number" id="month-unlock-inp" min="1" max="${cat.max}" placeholder="${state[activeTab].months[activeMonth-1].reps||''}"></label><button id="btn-month-unlock">Começar ${MONTH_LABELS[activeMonth]}</button></div>`;
+      sec.appendChild(ml);
       document.getElementById('btn-month-unlock').onclick=()=>{
         const val=parseInt(document.getElementById('month-unlock-inp').value);
-        if(!val||val<1){alert('Introduz um valor válido.');return;}
-        state[activeTab].months[activeMonth].unlocked=true;
-        state[activeTab].months[activeMonth].reps=val;
-        { const td=new Date(); state[activeTab].months[activeMonth].manualDate=td.toISOString().split('T')[0]; }
+        if(!val||val<1){alert('Valor inválido.');return;}
+        state[activeTab].months[activeMonth].unlocked=true;state[activeTab].months[activeMonth].reps=val;
+        const td=new Date();state[activeTab].months[activeMonth].manualDate=td.toISOString().split('T')[0];
         saveState();render();
       };
+    } else {
+      ml.innerHTML=`<div class="lock-icon">📅</div><p>Completa todos os dias do ${MONTH_LABELS[activeMonth-1]} para desbloquear.<br>Faltam ${faltam} dias.</p>`;
+      sec.appendChild(ml);
     }
     return;
   }
@@ -554,14 +708,13 @@ function renderSection(){
   const pct=(done/DAYS_PER_MONTH*100).toFixed(1);
   const total=m.days.reduce((s,v)=>s+(typeof v==='number'?v:0),0);
   const color=MONTH_COLORS[activeMonth];
-
-  const changelogHTML=m.changelog&&m.changelog.length?`<div class="changelog"><div class="changelog-title">📋 Historial de alterações</div>${m.changelog.map(e=>`<div class="changelog-entry"><div class="cl-meta">${e.date} &nbsp;·&nbsp; ${e.from} → ${e.to} ${e.unit}</div><div class="cl-reason">${e.reason}</div></div>`).join('')}</div>`:'';
+  const changelogHTML=m.changelog&&m.changelog.length?`<div class="changelog"><div class="changelog-title">📋 Historial</div>${m.changelog.map(e=>`<div class="changelog-entry"><div class="cl-meta">${e.date} · ${e.from}→${e.to} ${e.unit}</div><div class="cl-reason">${e.reason}</div></div>`).join('')}</div>`:'';
 
   const body=document.createElement('div');
   body.innerHTML=`
     <div class="section-topbar">
-      <div class="topbar-info">Valor atual: <strong>${m.reps||'—'} ${cat.unit}</strong><br>Objetivo: ${cat.max} ${cat.unit}<br><span style="font-size:0.72rem;color:var(--muted)">Início: ${fmtDate(getMonthStart(activeTab,activeMonth))}</span></div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+      <div class="topbar-info">Valor atual: <strong>${m.reps||'—'} ${cat.unit}</strong><br>Início: ${fmtDate(getMonthStart(activeTab,activeMonth))}</div>
+      <div class="topbar-btns">
         <button class="btn-adjust" id="btn-adj">⚙️ Ajustar valor</button>
         <button class="btn-adjust" id="btn-date" style="font-size:0.72rem">📅 Corrigir data</button>
       </div>
@@ -572,60 +725,44 @@ function renderSection(){
       <div class="bar-bg"><div class="bar-fill bar-${color}" style="width:${pct}%"></div></div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="stat-val">${done}</div><div class="stat-label">Dias feitos</div></div>
+      <div class="stat"><div class="stat-val">${done}</div><div class="stat-label">Concluídos</div></div>
       <div class="stat"><div class="stat-val">${total>0?total.toLocaleString('pt-PT'):'—'}</div><div class="stat-label">Total ${cat.unit}</div></div>
-      <div class="stat"><div class="stat-val" style="${failed>0?'color:#f87171':''}">${failed}</div><div class="stat-label">Falhados</div></div>
+      <div class="stat"><div class="stat-val" style="${failed>0?'color:var(--fail)':''}">${failed}</div><div class="stat-label">Falhados</div></div>
     </div>
     <div class="grid" id="main-grid"></div>`;
   sec.appendChild(body);
   document.getElementById('btn-adj').onclick=()=>openAdjust(activeTab,activeMonth);
-  const btnDate=document.getElementById('btn-date');
-  if(btnDate) btnDate.onclick=()=>openDateEdit(activeTab,activeMonth);
+  document.getElementById('btn-date').onclick=()=>openDateEdit(activeTab,activeMonth);
 
   const grid=document.getElementById('main-grid');
   m.days.forEach((dayVal,i)=>{
-    const isDone=dayVal!==null, hasNote=!!(m.notes&&m.notes[i]);
-    const repsLabel=isDone?(dayVal+' '+cat.unit):(m.reps?m.reps+' '+cat.unit:'— '+cat.unit);
-    const card=document.createElement('div'); card.className='card'+(isDone?' done':'');
-    card.innerHTML=`<button class="note-btn ${hasNote?'has-note':''}">${hasNote?'📝':'✏️'}</button><span class="card-date">${fmtDate(dayDate(activeMonth,i))}</span><span class="day-num">Dia ${i+1}</span><div class="check-ring"><span class="checkmark">✓</span></div><span class="card-reps">${repsLabel}</span>`;
+    const isDone=dayVal!==null&&dayVal!=='x',isFailed=dayVal==='x',hasNote=!!(m.notes&&m.notes[i]);
+    const repsLabel=isFailed?'Falhado':isDone?(dayVal+' '+cat.unit):(m.reps?m.reps+' '+cat.unit:'— '+cat.unit);
+    const ringIcon=isFailed?'✕':isDone?'✓':'';
+    const card=document.createElement('div');
+    card.className='card'+(isDone?' done':isFailed?' failed':'');
+    card.innerHTML=`
+      <button class="note-btn ${hasNote?'has-note':''}">${hasNote?'📝':'✏️'}</button>
+      <button class="x-btn" title="${isFailed?'Limpar':'Marcar falhado'}">❌</button>
+      <span class="card-date">${fmtDate(dayDate(activeMonth,i))}</span>
+      <span class="day-num">Dia ${i+1}</span>
+      <div class="check-ring"><span class="checkmark">${ringIcon}</span></div>
+      <span class="card-reps">${repsLabel}</span>`;
     card.querySelector('.note-btn').onclick=e=>openNote(activeTab,activeMonth,i,e);
-    card.onclick=()=>{state[activeTab].months[activeMonth].days[i]=isDone?null:(m.reps||0);saveState();render();};
+    card.querySelector('.x-btn').onclick=e=>{
+      e.stopPropagation();
+      state[activeTab].months[activeMonth].days[i]=isFailed?null:'x';
+      saveState();checkAchievements();render();
+    };
+    card.onclick=()=>{
+      const cur=state[activeTab].months[activeMonth].days[i];
+      if(cur===null||cur==='x') state[activeTab].months[activeMonth].days[i]=m.reps||0;
+      else state[activeTab].months[activeMonth].days[i]=null;
+      saveState();checkAchievements();render();
+    };
     grid.appendChild(card);
   });
 }
-
-// ── ACTION SHEET ─────────────────────────────────────────
-let actionCtx = { catId:null, mi:null, di:null };
-
-function openActionSheet(catId, mi, di) {
-  actionCtx = { catId, mi, di };
-  const cat = CATEGORIES.find(c => c.id === catId);
-  const d   = dayDate(mi, di, catId);
-  document.getElementById('action-sheet-title').textContent =
-    cat.emoji + ' ' + cat.label + ' · Dia ' + (di+1) + ' · ' + fmtDate(d);
-  document.getElementById('action-sheet').classList.add('open');
-}
-
-function closeActionSheet() {
-  document.getElementById('action-sheet').classList.remove('open');
-}
-
-document.getElementById('action-done').onclick = () => {
-  const m = state[actionCtx.catId].months[actionCtx.mi];
-  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = m.reps || 0;
-  saveState(); closeActionSheet(); render();
-};
-document.getElementById('action-fail').onclick = () => {
-  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = 'x';
-  saveState(); closeActionSheet(); render();
-};
-document.getElementById('action-clear').onclick = () => {
-  state[actionCtx.catId].months[actionCtx.mi].days[actionCtx.di] = null;
-  saveState(); closeActionSheet(); render();
-};
-document.getElementById('action-sheet').onclick = (e) => {
-  if (e.target === document.getElementById('action-sheet')) closeActionSheet();
-};
 
 render();
 </script>
