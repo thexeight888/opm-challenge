@@ -342,8 +342,7 @@ const OLD_KEY='opm_challenge_v2';
 // ── STATE ────────────────────────────────────────────────
 function defaultState(){
   return {
-    habits:[],
-    unlockedAchievements:[]
+    habits:[]
   };
 }
 
@@ -362,6 +361,7 @@ function migrateFromV1(){
       type:'reps',
       unit:'reps',
       target:100,
+      unlockedAchievements:[],
       months: flexData.months.map(m=>({
         reps: m.reps,
         unlocked: m.unlocked||false,
@@ -371,14 +371,19 @@ function migrateFromV1(){
         manualDate: m.manualDate||null
       }))
     };
-    return {habits:[habit], unlockedAchievements: old.unlockedAchievements||[]};
+    return {habits:[habit]};
   }catch(e){ return null; }
 }
 
 function loadState(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const s=JSON.parse(raw);
+      // migrate: ensure each habit has unlockedAchievements
+      if(s.habits) s.habits.forEach(h=>{ if(!h.unlockedAchievements) h.unlockedAchievements=[]; });
+      return s;
+    }
     // Try migrate from v1
     const migrated=migrateFromV1();
     if(migrated){ localStorage.setItem(KEY,JSON.stringify(migrated)); return migrated; }
@@ -466,13 +471,48 @@ function calcGlobalStats(){
 }
 
 // ── ACHIEVEMENTS ─────────────────────────────────────────
+function calcHabitStats(habit){
+  let totalDone=0, allDates=[];
+  habit.months.forEach((m,mi)=>{
+    m.days.forEach((v,di)=>{
+      if(v!==null&&v!=='x'){
+        totalDone++;
+        allDates.push(dayDate(habit,mi,di).toDateString());
+      }
+    });
+  });
+  const unique=[...new Set(allDates)].sort((a,b)=>new Date(a)-new Date(b));
+  let maxStreak=0,cur=0;
+  for(let i=0;i<unique.length;i++){
+    if(i===0) cur=1;
+    else{ const diff=(new Date(unique[i])-new Date(unique[i-1]))/86400000; cur=diff===1?cur+1:1; }
+    if(cur>maxStreak) maxStreak=cur;
+  }
+  let streak=0;
+  if(unique.length>0){
+    const last=new Date(unique[unique.length-1]); last.setHours(0,0,0,0);
+    const today=new Date(); today.setHours(0,0,0,0);
+    if((today-last)/86400000<=1){
+      streak=1;
+      for(let i=unique.length-2;i>=0;i--){
+        if((new Date(unique[i+1])-new Date(unique[i]))/86400000===1) streak++;
+        else break;
+      }
+    }
+  }
+  return {totalDone,streak,maxStreak};
+}
+
 function checkAchievements(){
-  const stats=calcGlobalStats();
-  let found=false;
+  if(!activeHabitId) return;
+  const habit=getHabit(activeHabitId);
+  if(!habit.unlockedAchievements) habit.unlockedAchievements=[];
+  const stats=calcHabitStats(habit);
+  let found=null;
   ACHIEVEMENTS.forEach(ach=>{
-    if(!state.unlockedAchievements.includes(ach.id)&&ach.check(stats)){
-      state.unlockedAchievements.push(ach.id);
-      found=ach; // show last
+    if(!habit.unlockedAchievements.includes(ach.id)&&ach.check(stats)){
+      habit.unlockedAchievements.push(ach.id);
+      found=ach;
     }
   });
   if(found){ saveState(); showAchPopup(found); }
@@ -633,6 +673,7 @@ function saveHabit(){
   } else {
     const newHabit={
       id:uid(), name, emoji:selectedEmoji, type:selectedType, unit:ti.unit, target,
+      unlockedAchievements:[],
       months:[{reps:startVal,unlocked:true,days:Array(DAYS_PER_MONTH).fill(null),notes:{},changelog:[],manualDate:dateVal||new Date().toISOString().split('T')[0]}]
     };
     state.habits.push(newHabit);
@@ -725,16 +766,20 @@ function renderHero(){
       <div class="streak-badge"><div class="streak-val">${stats.totalDone}</div><div class="streak-label">Dias totais</div></div>
     </div>`;
 
-  // Achievements
-  div.innerHTML+=`<div class="section-title">🏅 Conquistas</div>`;
-  const achGrid=document.createElement('div'); achGrid.className='achievements-grid';
-  ACHIEVEMENTS.forEach(ach=>{
-    const unlocked=state.unlockedAchievements.includes(ach.id);
-    const b=document.createElement('div'); b.className='badge'+(unlocked?' unlocked':'');
-    b.innerHTML=`<span class="badge-icon">${ach.icon}</span><span>${ach.name}<br><span style="font-size:0.58rem;opacity:0.6">${ach.desc}</span></span>`;
-    achGrid.appendChild(b);
-  });
-  div.appendChild(achGrid);
+  // Achievements per active habit
+  if(activeHabitId){
+    const activeHabit=getHabit(activeHabitId);
+    if(!activeHabit.unlockedAchievements) activeHabit.unlockedAchievements=[];
+    div.innerHTML+=`<div class="section-title">🏅 Conquistas — ${activeHabit.emoji} ${activeHabit.name}</div>`;
+    const achGrid=document.createElement('div'); achGrid.className='achievements-grid';
+    ACHIEVEMENTS.forEach(ach=>{
+      const unlocked=activeHabit.unlockedAchievements.includes(ach.id);
+      const b=document.createElement('div'); b.className='badge'+(unlocked?' unlocked':'');
+      b.innerHTML=`<span class="badge-icon">${ach.icon}</span><span>${ach.name}<br><span style="font-size:0.58rem;opacity:0.6">${ach.desc}</span></span>`;
+      achGrid.appendChild(b);
+    });
+    div.appendChild(achGrid);
+  }
 
   // Skills
   if(state.habits.length>0){
