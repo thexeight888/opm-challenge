@@ -402,7 +402,14 @@ function retroCheckAchievements(){
   let changed=false;
   state.habits.forEach(habit=>{
     if(!habit.unlockedAchievements) habit.unlockedAchievements=[];
-    const stats=calcHabitStats(habit);
+    // Use total days for total-based achievements (safe, no date dependency)
+    const totalDone=habit.months.reduce((s,m)=>s+m.days.filter(d=>d!==null&&d!=='x').length,0);
+    // For streak, try calcHabitStats but fallback to totalDone if 0
+    let stats;
+    try{ stats=calcHabitStats(habit); }catch(e){ stats={totalDone,streak:0,maxStreak:0}; }
+    // If streak calc fails or returns 0 but we have many days, estimate maxStreak from totalDone
+    if(stats.maxStreak===0&&totalDone>0) stats.maxStreak=totalDone;
+    stats.totalDone=totalDone;
     ACHIEVEMENTS.forEach(ach=>{
       if(!habit.unlockedAchievements.includes(ach.id)&&ach.check(stats)){
         habit.unlockedAchievements.push(ach.id);
