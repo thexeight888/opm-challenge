@@ -397,6 +397,22 @@ let state=loadState();
 let activeHabitId=state.habits.length>0?state.habits[0].id:null;
 let activeMonth=0;
 
+// Retroactively unlock achievements for existing habits on first load
+function retroCheckAchievements(){
+  let changed=false;
+  state.habits.forEach(habit=>{
+    if(!habit.unlockedAchievements) habit.unlockedAchievements=[];
+    const stats=calcHabitStats(habit);
+    ACHIEVEMENTS.forEach(ach=>{
+      if(!habit.unlockedAchievements.includes(ach.id)&&ach.check(stats)){
+        habit.unlockedAchievements.push(ach.id);
+        changed=true;
+      }
+    });
+  });
+  if(changed) saveState();
+}
+
 // ── HELPERS ──────────────────────────────────────────────
 function getHabit(id){ return state.habits.find(h=>h.id===id); }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -958,6 +974,7 @@ function renderDashboard(habit,container){
   container.appendChild(dash);
 }
 
+retroCheckAchievements();
 render();
 </script>
 </body>
