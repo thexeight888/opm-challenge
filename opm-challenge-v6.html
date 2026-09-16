@@ -362,14 +362,25 @@ function migrateFromV1(){
       unit:'reps',
       target:100,
       unlockedAchievements:[],
-      months: flexData.months.map(m=>({
-        reps: m.reps,
-        unlocked: m.unlocked||false,
-        days: m.days ? m.days.map(d=>typeof d==='boolean'?(d?(m.reps||30):null):d) : Array(DAYS_PER_MONTH).fill(null),
-        notes: m.notes||{},
-        changelog: m.changelog||[],
-        manualDate: m.manualDate||null
-      }))
+      months: flexData.months.map((m,mi)=>{
+        let days = m.days ? m.days.map(d=>typeof d==='boolean'?(d?(m.reps||30):null):d) : Array(DAYS_PER_MONTH).fill(null);
+        // Fix month 2 (index 1): mark last 2 days as failed
+        if(mi===1){
+          days[28]='x';
+          days[29]='x';
+        }
+        // Set correct manualDates for each month
+        const correctDates=['2026-06-17','2026-07-17','2026-08-17'];
+        const manualDate = correctDates[mi] || m.manualDate || null;
+        return {
+          reps: m.reps,
+          unlocked: m.unlocked||false,
+          days,
+          notes: m.notes||{},
+          changelog: m.changelog||[],
+          manualDate
+        };
+      })
     };
     return {habits:[habit]};
   }catch(e){ return null; }
@@ -382,6 +393,19 @@ function loadState(){
       const s=JSON.parse(raw);
       // migrate: ensure each habit has unlockedAchievements
       if(s.habits) s.habits.forEach(h=>{ if(!h.unlockedAchievements) h.unlockedAchievements=[]; });
+      // Fix flexoes dates and month 2 failures if dates are wrong
+      const flexHabit=s.habits&&s.habits.find(h=>h.id==='flexoes');
+      if(flexHabit&&flexHabit.months){
+        const correctDates=['2026-06-17','2026-07-17','2026-08-17'];
+        flexHabit.months.forEach((m,mi)=>{
+          if(mi<3) m.manualDate=correctDates[mi];
+          // Mark last 2 days of month 2 as failed if not already set
+          if(mi===1){
+            if(m.days[28]!=='x'&&m.days[28]!==null) m.days[28]='x';
+            if(m.days[29]!=='x'&&m.days[29]!==null) m.days[29]='x';
+          }
+        });
+      }
       return s;
     }
     // Try migrate from v1
