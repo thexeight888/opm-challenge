@@ -364,10 +364,10 @@ function migrateFromV1(){
       unlockedAchievements:[],
       months: flexData.months.map((m,mi)=>{
         let days = m.days ? m.days.map(d=>typeof d==='boolean'?(d?(m.reps||30):null):d) : Array(DAYS_PER_MONTH).fill(null);
-        // Fix month 2 (index 1): mark last 2 days as failed
+        // Ensure last 2 days of month 2 are marked as done
         if(mi===1){
-          days[28]='x';
-          days[29]='x';
+          if(days[28]==='x'||days[28]===null) days[28]=m.reps||30;
+          if(days[29]==='x'||days[29]===null) days[29]=m.reps||30;
         }
         // Set correct manualDates for each month
         const correctDates=['2026-06-17','2026-07-17','2026-08-17'];
@@ -399,10 +399,10 @@ function loadState(){
         const correctDates=['2026-06-17','2026-07-17','2026-08-17'];
         flexHabit.months.forEach((m,mi)=>{
           if(mi<3) m.manualDate=correctDates[mi];
-          // Mark last 2 days of month 2 as failed if not already set
+          // Ensure last 2 days of month 2 are marked as done
           if(mi===1){
-            if(m.days[28]!=='x'&&m.days[28]!==null) m.days[28]='x';
-            if(m.days[29]!=='x'&&m.days[29]!==null) m.days[29]='x';
+            if(m.days[28]==='x'||m.days[28]===null) m.days[28]=m.reps||30;
+            if(m.days[29]==='x'||m.days[29]===null) m.days[29]=m.reps||30;
           }
         });
       }
